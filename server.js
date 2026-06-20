@@ -2,14 +2,11 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.get('/', (req, res) => {
-  res.send('QueueGuide Backend is Running 🚀');
-});
 
 // In-memory data structure
 let lastToken = 0;
@@ -188,6 +185,9 @@ app.get('/api/stats', (req, res) => {
 // ================================================================
 //  POST /api/call-next
 //  Manual staff override — still works alongside sensor
+//  NOTE: avoid using this on counters where the IR sensor is already
+//  auto-calling tokens on 'arrive' (see /api/sensor below) — pick
+//  one trigger mechanism per counter to avoid skipping people.
 // ================================================================
 app.post('/api/call-next', (req, res) => {
   const { counterId } = req.body;
@@ -403,6 +403,15 @@ app.post('/api/sensor', (req, res) => {
   // ── Person arrived at counter ──
   if (event === 'arrive') {
     if (counter.serviceStartTime === null) {
+      // If nobody is currently marked as being served, auto-call the
+      // next token from this counter's queue so currentToken reflects
+      // the person who just walked up.
+      if (counter.currentToken === null && counter.queue.length > 0) {
+        const next = counter.queue.shift();
+        counter.currentToken = next.token;
+        console.log(`[Sensor] Counter ${counterId}: auto-called token #${next.token} on arrival`);
+      }
+
       counter.serviceStartTime = Date.now();
       console.log(`[Sensor] Counter ${counterId}: person ARRIVED — timer started`);
       return res.json({
