@@ -47,6 +47,7 @@ function calculateWaitTime(counterId, token) {
 // ================================================================
 //  GET /api/counters
 // ================================================================
+//returns live status of counters. also gives token being served, queue ahead and estimated wait time.
 app.get('/api/counters', (req, res) => {
   const result = Object.entries(counters).map(([id, counter]) => {
     const queueLength = counter.queue.length;
@@ -65,6 +66,7 @@ app.get('/api/counters', (req, res) => {
 // ================================================================
 //  POST /api/join
 // ================================================================
+//issues a new token and assigns it to chosen counter and gives position and wait time.
 app.post('/api/join', (req, res) => {
   const { counterId, name } = req.body;
 
@@ -90,6 +92,7 @@ app.post('/api/join', (req, res) => {
 // ================================================================
 //  GET /api/status/:token
 // ================================================================
+//looks up the current status of a token.
 app.get('/api/status/:token', (req, res) => {
   const token = parseInt(req.params.token, 10);
 
@@ -136,6 +139,7 @@ app.get('/api/status/:token', (req, res) => {
 // ================================================================
 //  POST /api/leave
 // ================================================================
+//lets a person cancel their appointment.
 app.post('/api/leave', (req, res) => {
   const { token } = req.body;
 
@@ -171,6 +175,7 @@ app.post('/api/leave', (req, res) => {
 // ================================================================
 //  GET /api/stats
 // ================================================================
+//returns avg service time and session history of a counter.
 app.get('/api/stats', (req, res) => {
   const stats = Object.entries(counters).map(([id, c]) => ({
     id,
@@ -229,6 +234,7 @@ app.post('/api/call-next', (req, res) => {
 // ================================================================
 //  GET /api/slots?time=14:00&date=2025-01-15
 // ================================================================
+//lets someone book a future appointment.
 app.get('/api/slots', (req, res) => {
   const { time, date } = req.query;
   if (!time || !date) {
@@ -343,6 +349,7 @@ app.get('/api/slots', (req, res) => {
 // ================================================================
 //  POST /api/join-scheduled
 // ================================================================
+//confirms a scheduled booking.
 app.post('/api/join-scheduled', (req, res) => {
   const { name, phone, token, counterId } = req.body;
 
@@ -388,6 +395,7 @@ app.post('/api/join-scheduled', (req, res) => {
 //  POST /api/sensor
 //  Called by ESP32 when IR sensor detects arrival or departure
 // ================================================================
+//webhooks for esp32 ir sensor.
 app.post('/api/sensor', (req, res) => {
   const { counterId, event } = req.body;
 
